@@ -1,156 +1,176 @@
-<script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Timer App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f3f4f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+    .timer-container {
+      background-color: #ffffff;
+      border-radius: 1.5rem;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 28rem;
+      text-align: center;
+      border: 2px solid #e5e7eb;
+    }
+    .timer-display {
+      font-size: 4rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 2rem 0;
+      padding: 1rem;
+      background-color: #f9fafb;
+      border-radius: 1rem;
+      border: 1px solid #d1d5db;
+    }
+  </style>
+</head>
+<body>
+  <div class="timer-container">
+    <h1 class="text-3xl font-bold text-gray-800 mb-4">Simple Timer</h1>
+    <div class="input-group">
+      <label for="timer-minutes" class="text-gray-600 font-medium text-lg">Set Minutes:</label>
+      <input type="number" id="timer-minutes" class="timer-input" value="0">
+      <label for="timer-seconds" class="text-gray-600 font-medium text-lg">Set Seconds:</label>
+      <input type="number" id="timer-seconds" class="timer-input" value="0">
+    </div>
+    <div id="timer-display" class="timer-display">00:00</div>
+    <div class="button-group">
+      <button id="start-btn" class="timer-btn start-btn">Start</button>
+      <button id="pause-btn" class="timer-btn pause-btn" disabled>Pause</button>
+      <button id="reset-btn" class="timer-btn reset-btn" disabled>Reset</button>
+    </div>
+  </div>
+
+  <script defer>
     const timerDisplay = document.getElementById('timer-display');
     const minutesInput = document.getElementById('timer-minutes');
     const secondsInput = document.getElementById('timer-seconds');
     const startBtn = document.getElementById('start-btn');
     const pauseBtn = document.getElementById('pause-btn');
     const resetBtn = document.getElementById('reset-btn');
-    const recentTimesList = document.getElementById('recent-times-list');
 
     let totalSeconds = 0;
     let timerInterval;
     let isPaused = false;
-    let synth = null; // will be created after first user gesture
-    const MAX_RECENT_TIMES = 5;
+    let synth = null;
 
-    // ✅ Custom message box (replaces alert)
+    // ✅ Custom popup instead of alert
     function showMessage(message) {
-        const messageBox = document.createElement('div');
-        messageBox.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            font-family: 'Inter', sans-serif;
-            font-size: 1.5rem;
-            text-align: center;
-            border: 2px solid #e5e7eb;
-        `;
-        messageBox.textContent = message;
-        document.body.appendChild(messageBox);
-        setTimeout(() => document.body.removeChild(messageBox), 2000);
+      const box = document.createElement('div');
+      box.style.cssText = `
+        position: fixed; top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        background: white; padding: 2rem;
+        border-radius: 1rem; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        font-size: 1.5rem; font-family: 'Inter', sans-serif;
+        z-index: 1000; border: 2px solid #e5e7eb;
+      `;
+      box.textContent = message;
+      document.body.appendChild(box);
+      setTimeout(() => document.body.removeChild(box), 2000);
     }
 
-    function formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
 
     function updateDisplay() {
-        timerDisplay.textContent = formatTime(totalSeconds);
+      timerDisplay.textContent = formatTime(totalSeconds);
     }
 
     async function playSound() {
-        await Tone.start(); // ensure context is running on mobile
-        if (!synth) {
-            synth = new Tone.Synth().toDestination();
-        }
-        synth.triggerAttackRelease("C4", "8n");
+      await Tone.start();
+      if (!synth) synth = new Tone.Synth().toDestination();
+      synth.triggerAttackRelease("C4", "8n");
     }
 
     function startTimer() {
-        if (totalSeconds <= 0) {
-            showMessage("Please set a valid time!");
-            return;
+      if (totalSeconds <= 0) {
+        showMessage("Please set a valid time!");
+        return;
+      }
+      isPaused = false;
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+      resetBtn.disabled = false;
+      minutesInput.disabled = true;
+      secondsInput.disabled = true;
+
+      timerInterval = setInterval(() => {
+        if (totalSeconds > 0) {
+          totalSeconds--;
+          updateDisplay();
+        } else {
+          clearInterval(timerInterval);
+          showMessage("Time's up!");
+          playSound();
+          resetTimerState();
         }
-
-        isPaused = false;
-        startBtn.disabled = true;
-        pauseBtn.disabled = false;
-        resetBtn.disabled = false;
-        minutesInput.disabled = true;
-        secondsInput.disabled = true;
-
-        timerInterval = setInterval(() => {
-            if (totalSeconds > 0) {
-                totalSeconds--;
-                updateDisplay();
-            } else {
-                clearInterval(timerInterval);
-                showMessage("Time's up!");
-                playSound();
-                resetTimerState();
-            }
-        }, 1000);
+      }, 1000);
     }
 
     function pauseTimer() {
-        isPaused = true;
-        clearInterval(timerInterval);
-        startBtn.disabled = false;
-        startBtn.textContent = 'Resume';
-        pauseBtn.disabled = true;
+      isPaused = true;
+      clearInterval(timerInterval);
+      startBtn.disabled = false;
+      startBtn.textContent = 'Resume';
+      pauseBtn.disabled = true;
     }
 
     function resetTimer() {
-        clearInterval(timerInterval);
-        resetTimerState();
+      clearInterval(timerInterval);
+      resetTimerState();
     }
 
     function resetTimerState() {
-        totalSeconds = 0;
-        minutesInput.value = 0;
-        secondsInput.value = 0;
-        updateDisplay();
-        startBtn.disabled = false;
-        pauseBtn.disabled = true;
-        resetBtn.disabled = true;
-        minutesInput.disabled = false;
-        secondsInput.disabled = false;
-        startBtn.textContent = 'Start';
+      totalSeconds = 0;
+      minutesInput.value = 0;
+      secondsInput.value = 0;
+      updateDisplay();
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      resetBtn.disabled = true;
+      minutesInput.disabled = false;
+      secondsInput.disabled = false;
+      startBtn.textContent = 'Start';
     }
 
-    function loadRecentTimes() {
-        const recentTimes = JSON.parse(localStorage.getItem('recentTimers')) || [];
-        recentTimesList.innerHTML = '';
-        recentTimes.forEach(time => {
-            const button = document.createElement('button');
-            button.className = 'recent-time-btn';
-            button.textContent = formatTime(time.minutes * 60 + time.seconds);
-            button.addEventListener('click', () => {
-                minutesInput.value = time.minutes;
-                secondsInput.value = time.seconds;
-            });
-            recentTimesList.appendChild(button);
-        });
-    }
-
-    function saveRecentTime(minutes, seconds) {
-        let recentTimes = JSON.parse(localStorage.getItem('recentTimers')) || [];
-        const newTime = { minutes, seconds };
-        recentTimes = recentTimes.filter(time => time.minutes !== minutes || time.seconds !== seconds);
-        recentTimes.unshift(newTime);
-        if (recentTimes.length > MAX_RECENT_TIMES) recentTimes.pop();
-        localStorage.setItem('recentTimers', JSON.stringify(recentTimes));
-        loadRecentTimes();
-    }
-
+    // ✅ Event listeners
     startBtn.addEventListener('click', async () => {
-        await Tone.start(); // resume audio context at gesture
-        if (!synth) {
-            synth = new Tone.Synth().toDestination();
-        }
-        if (!isPaused) {
-            const minutes = parseInt(minutesInput.value, 10) || 0;
-            const seconds = parseInt(secondsInput.value, 10) || 0;
-            if (minutes > 0 || seconds > 0) {
-                saveRecentTime(minutes, seconds);
-            }
-            totalSeconds = (minutes * 60) + seconds;
-        }
-        startTimer();
+      await Tone.start();
+      if (!synth) synth = new Tone.Synth().toDestination();
+      if (!isPaused) {
+        const m = parseInt(minutesInput.value, 10) || 0;
+        const s = parseInt(secondsInput.value, 10) || 0;
+        totalSeconds = m * 60 + s;
+      }
+      startTimer();
     });
-
     pauseBtn.addEventListener('click', pauseTimer);
     resetBtn.addEventListener('click', resetTimer);
 
-    // ✅ Show 00:00 immediately on load
-    updateDisplay();
-    loadRecentTimes();
-</script>
+    // ✅ Initialize display
+    window.addEventListener('DOMContentLoaded', () => {
+      updateDisplay(); // show 00:00 immediately
+    });
+  </script>
+</body>
+</html>
