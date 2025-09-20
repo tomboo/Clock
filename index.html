@@ -173,7 +173,7 @@
     let totalSeconds = 0;
     let timerInterval;
     let isPaused = false;
-    let synth;
+    let synth = new Tone.Synth().toDestination(); // Initialize synth here
     const MAX_RECENT_TIMES = 5;
 
     // A custom alert box function to avoid the default browser alert
@@ -212,9 +212,6 @@
     }
 
     function playSound() {
-        if (!synth) {
-            synth = new Tone.Synth().toDestination();
-        }
         // Play a simple C4 note for a brief duration
         synth.triggerAttackRelease("C4", "8n");
     }
@@ -255,10 +252,6 @@
 
     function resetTimer() {
         clearInterval(timerInterval);
-        if (synth) {
-            synth.dispose();
-            synth = null;
-        }
         resetTimerState();
     }
     
