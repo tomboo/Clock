@@ -1,166 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Timer App</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 1rem;
-        }
-
-        .timer-container {
-            background-color: #ffffff;
-            border-radius: 1.5rem;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            padding: 2.5rem;
-            width: 100%;
-            max-width: 28rem;
-            text-align: center;
-            border: 2px solid #e5e7eb;
-        }
-        
-        .timer-display {
-            font-size: 4rem;
-            font-weight: 700;
-            color: #1f2937;
-            margin: 2rem 0;
-            padding: 1rem;
-            background-color: #f9fafb;
-            border-radius: 1rem;
-            border: 1px solid #d1d5db;
-        }
-        
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            margin-bottom: 2rem;
-            text-align: left;
-        }
-        
-        .timer-input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            font-size: 1.25rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.75rem;
-            background-color: #f3f4f6;
-            color: #1f2937;
-            outline: none;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-
-        .timer-input:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-
-        .button-group {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        
-        .timer-btn {
-            padding: 0.75rem 1.5rem;
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: #ffffff;
-            border: none;
-            border-radius: 9999px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .timer-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .timer-btn:active {
-            transform: translateY(0);
-        }
-        
-        .start-btn {
-            background-color: #22c55e;
-            box-shadow: 0 4px 6px rgba(34, 197, 94, 0.3);
-        }
-        
-        .pause-btn {
-            background-color: #f97316;
-            box-shadow: 0 4px 6px rgba(249, 115, 22, 0.3);
-        }
-        
-        .reset-btn {
-            background-color: #ef4444;
-            box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
-        }
-        
-        .recent-times-container {
-            margin-top: 2rem;
-            text-align: left;
-        }
-        
-        .recent-times-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 0.75rem;
-        }
-        
-        .recent-time-btn {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #4b5563;
-            background-color: #e5e7eb;
-            border: 1px solid #d1d5db;
-            border-radius: 9999px;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.2s;
-        }
-        
-        .recent-time-btn:hover {
-            background-color: #d1d5db;
-            transform: translateY(-1px);
-        }
-    </style>
-</head>
-<body>
-
-<div class="timer-container">
-    <h1 class="text-3xl font-bold text-gray-800 mb-4">Simple Timer</h1>
-    <div class="input-group">
-        <label for="timer-minutes" class="text-gray-600 font-medium text-lg">Set Minutes:</label>
-        <input type="number" id="timer-minutes" class="timer-input" placeholder="Enter minutes" value="0">
-        <label for="timer-seconds" class="text-gray-600 font-medium text-lg">Set Seconds:</label>
-        <input type="number" id="timer-seconds" class="timer-input" placeholder="Enter seconds" value="0">
-    </div>
-    <div id="timer-display" class="timer-display">00:00</div>
-    <div class="button-group">
-        <button id="start-btn" class="timer-btn start-btn">Start</button>
-        <button id="pause-btn" class="timer-btn pause-btn" disabled>Pause</button>
-        <button id="reset-btn" class="timer-btn reset-btn" disabled>Reset</button>
-    </div>
-    <div class="recent-times-container">
-        <p class="text-gray-600 font-medium text-lg">Recent Times:</p>
-        <div id="recent-times-list" class="recent-times-list">
-            <!-- Recent time buttons will be inserted here by JavaScript -->
-        </div>
-    </div>
-</div>
-
 <script>
     const timerDisplay = document.getElementById('timer-display');
     const minutesInput = document.getElementById('timer-minutes');
@@ -173,10 +10,9 @@
     let totalSeconds = 0;
     let timerInterval;
     let isPaused = false;
-    let synth = new Tone.Synth().toDestination(); // Initialize synth here
+    let synth = null; // don’t create synth yet
     const MAX_RECENT_TIMES = 5;
 
-    // A custom alert box function to avoid the default browser alert
     function showMessage(message) {
         const messageBox = document.createElement('div');
         messageBox.style.cssText = `
@@ -196,9 +32,7 @@
         `;
         messageBox.textContent = message;
         document.body.appendChild(messageBox);
-        setTimeout(() => {
-            document.body.removeChild(messageBox);
-        }, 2000); // Hide after 2 seconds
+        setTimeout(() => document.body.removeChild(messageBox), 2000);
     }
 
     function formatTime(seconds) {
@@ -211,8 +45,11 @@
         timerDisplay.textContent = formatTime(totalSeconds);
     }
 
-    function playSound() {
-        // Play a simple C4 note for a brief duration
+    async function playSound() {
+        await Tone.start(); // ensure context is running on mobile
+        if (!synth) {
+            synth = new Tone.Synth().toDestination();
+        }
         synth.triggerAttackRelease("C4", "8n");
     }
 
@@ -236,7 +73,7 @@
             } else {
                 clearInterval(timerInterval);
                 showMessage("Time's up!");
-                playSound();
+                playSound(); // safe on mobile now
                 resetTimerState();
             }
         }, 1000);
@@ -268,7 +105,6 @@
         startBtn.textContent = 'Start';
     }
 
-    // Function to load recent timers from localStorage
     function loadRecentTimes() {
         const recentTimes = JSON.parse(localStorage.getItem('recentTimers')) || [];
         recentTimesList.innerHTML = '';
@@ -284,38 +120,27 @@
         });
     }
 
-    // Function to save the current timer duration to localStorage
     function saveRecentTime(minutes, seconds) {
         let recentTimes = JSON.parse(localStorage.getItem('recentTimers')) || [];
         const newTime = { minutes, seconds };
-        
-        // Check if the time already exists and remove it to move it to the front
         recentTimes = recentTimes.filter(time => time.minutes !== minutes || time.seconds !== seconds);
-        
-        recentTimes.unshift(newTime); // Add to the beginning of the array
-        
-        // Keep the list to a maximum size
-        if (recentTimes.length > MAX_RECENT_TIMES) {
-            recentTimes.pop();
-        }
-        
+        recentTimes.unshift(newTime);
+        if (recentTimes.length > MAX_RECENT_TIMES) recentTimes.pop();
         localStorage.setItem('recentTimers', JSON.stringify(recentTimes));
-        loadRecentTimes(); // Reload the list to update the display
+        loadRecentTimes();
     }
 
-    startBtn.addEventListener('click', () => {
-        // Start the audio context, which requires a user gesture
-        if (Tone.context.state !== 'running') {
-            Tone.start();
+    startBtn.addEventListener('click', async () => {
+        await Tone.start(); // resume context at gesture
+        if (!synth) {
+            synth = new Tone.Synth().toDestination();
         }
         if (!isPaused) {
             const minutes = parseInt(minutesInput.value, 10) || 0;
             const seconds = parseInt(secondsInput.value, 10) || 0;
-            
             if (minutes > 0 || seconds > 0) {
                 saveRecentTime(minutes, seconds);
             }
-            
             totalSeconds = (minutes * 60) + seconds;
         }
         startTimer();
@@ -324,11 +149,6 @@
     pauseBtn.addEventListener('click', pauseTimer);
     resetBtn.addEventListener('click', resetTimer);
 
-    // Initial display and recent times load
     updateDisplay();
     loadRecentTimes();
-
 </script>
-
-</body>
-</html>
