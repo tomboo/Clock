@@ -10,8 +10,31 @@
     let totalSeconds = 0;
     let timerInterval;
     let isPaused = false;
-    let synth = null; // don’t create synth until user gesture
+    let synth = null; // will be created after first user gesture
     const MAX_RECENT_TIMES = 5;
+
+    // ✅ Custom message box (replaces alert)
+    function showMessage(message) {
+        const messageBox = document.createElement('div');
+        messageBox.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.5rem;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+        `;
+        messageBox.textContent = message;
+        document.body.appendChild(messageBox);
+        setTimeout(() => document.body.removeChild(messageBox), 2000);
+    }
 
     function formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
@@ -24,7 +47,7 @@
     }
 
     async function playSound() {
-        await Tone.start(); // ensures audio context is running on mobile
+        await Tone.start(); // ensure context is running on mobile
         if (!synth) {
             synth = new Tone.Synth().toDestination();
         }
@@ -33,7 +56,7 @@
 
     function startTimer() {
         if (totalSeconds <= 0) {
-            alert("Please set a valid time!");
+            showMessage("Please set a valid time!");
             return;
         }
 
@@ -50,7 +73,7 @@
                 updateDisplay();
             } else {
                 clearInterval(timerInterval);
-                alert("Time's up!");
+                showMessage("Time's up!");
                 playSound();
                 resetTimerState();
             }
@@ -109,7 +132,7 @@
     }
 
     startBtn.addEventListener('click', async () => {
-        await Tone.start(); // resume context at gesture
+        await Tone.start(); // resume audio context at gesture
         if (!synth) {
             synth = new Tone.Synth().toDestination();
         }
@@ -127,7 +150,7 @@
     pauseBtn.addEventListener('click', pauseTimer);
     resetBtn.addEventListener('click', resetTimer);
 
-    // 👇 ensure timer shows 00:00 immediately
+    // ✅ Show 00:00 immediately on load
     updateDisplay();
     loadRecentTimes();
 </script>
