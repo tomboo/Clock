@@ -10,30 +10,8 @@
     let totalSeconds = 0;
     let timerInterval;
     let isPaused = false;
-    let synth = null; // don’t create synth yet
+    let synth = null; // don’t create synth until user gesture
     const MAX_RECENT_TIMES = 5;
-
-    function showMessage(message) {
-        const messageBox = document.createElement('div');
-        messageBox.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            font-family: 'Inter', sans-serif;
-            font-size: 1.5rem;
-            text-align: center;
-            border: 2px solid #e5e7eb;
-        `;
-        messageBox.textContent = message;
-        document.body.appendChild(messageBox);
-        setTimeout(() => document.body.removeChild(messageBox), 2000);
-    }
 
     function formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
@@ -46,7 +24,7 @@
     }
 
     async function playSound() {
-        await Tone.start(); // ensure context is running on mobile
+        await Tone.start(); // ensures audio context is running on mobile
         if (!synth) {
             synth = new Tone.Synth().toDestination();
         }
@@ -55,7 +33,7 @@
 
     function startTimer() {
         if (totalSeconds <= 0) {
-            showMessage("Please set a valid time!");
+            alert("Please set a valid time!");
             return;
         }
 
@@ -72,8 +50,8 @@
                 updateDisplay();
             } else {
                 clearInterval(timerInterval);
-                showMessage("Time's up!");
-                playSound(); // safe on mobile now
+                alert("Time's up!");
+                playSound();
                 resetTimerState();
             }
         }, 1000);
@@ -91,7 +69,7 @@
         clearInterval(timerInterval);
         resetTimerState();
     }
-    
+
     function resetTimerState() {
         totalSeconds = 0;
         minutesInput.value = 0;
@@ -149,6 +127,7 @@
     pauseBtn.addEventListener('click', pauseTimer);
     resetBtn.addEventListener('click', resetTimer);
 
+    // 👇 ensure timer shows 00:00 immediately
     updateDisplay();
     loadRecentTimes();
 </script>
